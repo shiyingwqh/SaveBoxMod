@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "savebox",
+  "version": "${version}",
+  "name": "SaveBox",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/savebox/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "com.shiying.savebox.client.SaveboxClient"
+    ],
+    "main": [
+      "com.shiying.savebox.Savebox"
+    ]
+  },
+  "mixins": [
+    "savebox.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.10",
+    "fabric": "*",
+    "minecraft": "1.19.2"
+  }
+}
