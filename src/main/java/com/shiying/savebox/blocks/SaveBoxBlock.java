@@ -2,30 +2,60 @@ package com.shiying.savebox.blocks;
 
 import com.shiying.savebox.Savebox;
 import com.shiying.savebox.entity.SaveBoxBlockEntity;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.BlockWithEntity;
-import net.minecraft.block.InventoryProvider;
+import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.block.entity.FurnaceBlockEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.SidedInventory;
-import net.minecraft.screen.NamedScreenHandlerFactory;
-import net.minecraft.screen.ScreenHandler;
+import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.item.ItemStack;
+import net.minecraft.screen.*;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.state.StateManager;
+import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.random.Random;
+import net.minecraft.util.shape.ArrayVoxelShape;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
 import net.minecraft.world.event.listener.GameEventListener;
 import org.jetbrains.annotations.Nullable;
 
-public class SaveBoxBlock extends BlockWithEntity{
+import java.util.Objects;
+
+public class SaveBoxBlock extends BlockWithEntity {
+    public static final BooleanProperty LOCKED = BooleanProperty.of("locked");
+
     public SaveBoxBlock(Settings settings) {
         super(settings);
+        setDefaultState(
+                getStateManager().getDefaultState()
+                        .with(LOCKED, false)
+                        .with(Properties.FACING, Direction.NORTH)
+        );
+    }
+
+    @Override
+    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+        super.appendProperties(builder);
+        builder.add(LOCKED);
+        builder.add(Properties.FACING);
+    }
+
+    @Override
+    public BlockState getPlacementState(ItemPlacementContext ctx) {
+        return (BlockState) this.getDefaultState().with(Properties.FACING, ctx.getPlayerLookDirection().getOpposite());
     }
 
     @Nullable
@@ -42,7 +72,11 @@ public class SaveBoxBlock extends BlockWithEntity{
 
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+
         if (!world.isClient) {
+            if (state.get(LOCKED) && !((SaveBoxBlockEntity) Objects.requireNonNull(world.getBlockEntity(pos))).playerCanUse(player)) {
+                return ActionResult.PASS;
+            }
             NamedScreenHandlerFactory screenHandlerFactory = state.createScreenHandlerFactory(world, pos);
 
             if (screenHandlerFactory != null) {
@@ -53,32 +87,35 @@ public class SaveBoxBlock extends BlockWithEntity{
     }
 
     @Override
-    public boolean hasComparatorOutput(BlockState state) {
-        return true;
+    public BlockRenderType getRenderType(BlockState state) {
+        return BlockRenderType.MODEL;
     }
 
     @Override
-    public int getComparatorOutput(BlockState state, World world, BlockPos pos) {
-        return ScreenHandler.calculateComparatorOutput(world.getBlockEntity(pos));
+    public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+        return makeShape();
     }
 
-    @Nullable
+    public VoxelShape makeShape() {
+        VoxelShape shape = VoxelShapes.empty();
+        shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0, 0, 0.0625, 1, 1, 1));
+        shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0, 0, 0, 1, 0.0625, 0.0625));
+        shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0, 0.9375, 0, 1, 1, 0.0625));
+
+        return shape;
+    }
+
     @Override
-    public NamedScreenHandlerFactory createScreenHandlerFactory(BlockState state, World world, BlockPos pos) {
-        return super.createScreenHandlerFactory(state, world, pos);
+    public float calcBlockBreakingDelta(BlockState state, PlayerEntity player, BlockView world, BlockPos pos) {
+        if (state.get(LOCKED)) {
+            return 0.0F;
+        } else {
+            return super.calcBlockBreakingDelta(state, player, world, pos);
+        }
     }
 
-    @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
-        return checkType(type, Savebox.SAVE_BOX_ENTITY, new BlockEntityTicker<SaveBoxBlockEntity>() {
-            @Override
-            public void tick(World world, BlockPos pos, BlockState state, SaveBoxBlockEntity blockEntity) {
-                if (world.isClient){
-                    return;
-                }
-            }
-        });
+    public void onPlaced(World world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
+        super.onPlaced(world, pos, state, placer, itemStack);
     }
-
 }

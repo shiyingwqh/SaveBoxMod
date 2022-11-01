@@ -5,6 +5,8 @@ import java.util.Objects;
 public interface SaveBoxLocker {
     String getPassword();
 
+
+
     void setPassword(String password);
 
     default boolean checkPassword(String password) {
@@ -12,6 +14,6 @@ public interface SaveBoxLocker {
     }
 
     default boolean isLocked() {
-        return getPassword() != null;
+        return getPassword() != null && !getPassword().isEmpty();
     }
 }

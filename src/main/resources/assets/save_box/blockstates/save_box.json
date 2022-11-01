@@ -1,0 +1,50 @@
+{
+  "variants": {
+    "locked=true,facing=north": {
+      "model": "save_box:block/save_box"
+    },
+    "locked=true,facing=east": {
+      "model": "save_box:block/save_box",
+      "y": 90
+    },
+    "locked=true,facing=south": {
+      "model": "save_box:block/save_box",
+      "y": 180
+    },
+    "locked=true,facing=west": {
+      "model": "save_box:block/save_box",
+      "y": 270
+    },
+    "locked=true,facing=up": {
+      "model": "save_box:block/save_box",
+      "x": 90
+    },
+    "locked=true,facing=down": {
+      "model": "save_box:block/save_box",
+      "x": 270
+    },
+    "locked=false,facing=north": {
+      "model": "save_box:block/save_box_unlock"
+    },
+    "locked=false,facing=east": {
+      "model": "save_box:block/save_box_unlock",
+      "y": 90
+    },
+    "locked=false,facing=south": {
+      "model": "save_box:block/save_box_unlock",
+      "y": 180
+    },
+    "locked=false,facing=west": {
+      "model": "save_box:block/save_box_unlock",
+      "y": 270
+    },
+    "locked=false,facing=up": {
+      "model": "save_box:block/save_box_unlock",
+      "x": 90
+    },
+    "locked=false,facing=down": {
+      "model": "save_box:block/save_box_unlock",
+      "x": -90
+    }
+  }
+}

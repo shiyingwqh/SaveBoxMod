@@ -4,6 +4,7 @@ import com.shiying.savebox.SaveBoxLocker;
 import com.shiying.savebox.Savebox;
 import com.shiying.savebox.entity.SaveBoxBlockEntity;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.ChestBlock;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.gui.screen.ingame.AnvilScreen;
 import net.minecraft.entity.player.PlayerEntity;
@@ -12,34 +13,35 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.screen.AnvilScreenHandler;
-import net.minecraft.screen.Property;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.*;
+import net.minecraft.screen.slot.CraftingResultSlot;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.util.math.BlockPos;
 
 public class SaveBoxScreenHandler extends ScreenHandler {
     private final Inventory inventory;
-    private SaveBoxLocker saveBoxLocker;
+    private boolean locked;
+    private BlockPos pos;
 
     public SaveBoxScreenHandler(int syncId, PlayerInventory playerInventory, PacketByteBuf byteBuf) {
-        this(syncId,playerInventory, new SimpleInventory(9));
-        saveBoxLocker = (SaveBoxLocker) playerInventory.player.world.getBlockEntity(byteBuf.readBlockPos());
+        this(syncId, playerInventory, new SimpleInventory(27));
+        pos = byteBuf.readBlockPos();
+        locked = byteBuf.readBoolean();
     }
 
     public SaveBoxScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory) {
         super(Savebox.SAVE_BOX_SCREEN_HANDLER_TYPE, syncId);
-        checkSize(inventory, 9);
+        checkSize(inventory, 27);
         this.inventory = inventory;
         inventory.onOpen(playerInventory.player);
         int m;
         int l;
         for (m = 0; m < 3; ++m) {
-            for (l = 0; l < 3; ++l) {
-                this.addSlot(new Slot(inventory, l + m * 3, 62 + l * 18, 17 + m * 18));
+            for (l = 0; l < 9; ++l) {
+                this.addSlot(new Slot(inventory, l + m * 9, 8 + l * 18, 18 + m * 18));
             }
         }
+
         for (m = 0; m < 3; ++m) {
             for (l = 0; l < 9; ++l) {
                 this.addSlot(new Slot(playerInventory, l + m * 9 + 9, 8 + l * 18, 84 + m * 18));
@@ -82,7 +84,15 @@ public class SaveBoxScreenHandler extends ScreenHandler {
         return this.inventory.canPlayerUse(player);
     }
 
-    public SaveBoxLocker getSaveBoxLocker() {
-        return saveBoxLocker;
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+
+    public BlockPos getPos() {
+        return pos;
     }
 }
